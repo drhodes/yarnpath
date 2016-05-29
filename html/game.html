@@ -3,23 +3,30 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width">
-    <title>QUnit Example</title>
-    <link rel="stylesheet" href="https://code.jquery.com/qunit/qunit-1.23.1.css">
+    <title>yarnpath</title>    
     <script type="text/javascript"
             src="https://cdnjs.cloudflare.com/ajax/libs/snap.svg/0.4.1/snap.svg.js">
     </script>
   </head>
+  
   <body>
-    <div id="qunit"></div>
-    <div id="qunit-fixture"></div>
-    <script src="https://code.jquery.com/qunit/qunit-1.23.1.js"></script>
-    <script src="../tests/tests.js"></script>
-    
+    <center>
+      <svg id="svg" width="640" height="640"></svg>
+    </center>
     <script src="../js/mod_yarnpath.js"></script>
     <script src="../js/state_machine.js"></script>
     <script src="../js/loc.js"></script>
     <script src="../js/tile.js"></script>
     <script src="../js/board.js"></script>
     <script src="../js/level.js"></script>
+    <script src="../js/level-mgr.js"></script>
+    <script src="../js/spot.js"></script>
+
+    <script src="../js/game.js"></script>
+
+    <script>
+      new yp.Game();
+    </script>
+
   </body>
 </html>

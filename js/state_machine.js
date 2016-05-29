@@ -1,5 +1,5 @@
 // -------------------------------------------------------
-// it's a state machine, yay!
+// it's a state machine
 
 yp.StateMachine = function(startState) {
     this.curState = startState;
@@ -25,7 +25,7 @@ yp.StateMachine.prototype.assertStateExists = function(state) {
     return true;
 };
 
-// :: [(Trigger, State, State)] -> void.
+// :: [(Trigger, State, State)] -> void
 yp.StateMachine.prototype.addTrans = function(transitions) {
     var that = this;
     transitions.forEach(function(t) {

@@ -6,13 +6,13 @@ QUnit.test( "hello test", function( assert ) {
 QUnit.test( "out of bounds test 1", function( assert ) {
     var brd = new yp.Board(3,10);
     var loc = new yp.Loc(0, 0);
-    assert.ok( brd.GetBlock(loc) == 0  );
+    assert.ok( brd.GetTile(loc) == 0  );
 });
 
 QUnit.test( "out of bounds test 2", function( assert ) {
     var brd = new yp.Board(3,10);
     var loc = new yp.Loc(2, 9);
-    assert.ok( brd.GetBlock(loc) == 0  );
+    assert.ok( brd.GetTile(loc) == 0  );
 });
 
 
@@ -91,3 +91,21 @@ QUnit.test( "state machine 5", function( assert ) {
 });
 
 
+// ------------------------------------------------------------------
+QUnit.test( "level test 1", function( assert ) {
+    var map = [
+        "o o o o o",
+        "o # o o o",
+        "o s o o o",
+        "o o o o o",
+        "o o o o o",
+    ];
+
+    var lev = new yp.Level(map);
+
+    assert.ok(lev.Width() == 5);
+    assert.ok(lev.Height() == 5);
+    assert.ok(lev.TileAt(1,1).IsBlock());
+    assert.ok(lev.TileAt(1,2).IsStartSquare());
+   
+});
