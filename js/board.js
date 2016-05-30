@@ -4,11 +4,16 @@
 
 yp.Board = function Board(w, h) {    
     console.log("init board...");
-    
     this.width = w;
     this.height = h;
     this.tiles = [];
     this.startLoc = nil;
+    this.spot = nil;
+    // snap els
+    this.rect = nil; // dark grey border
+    this.back = nil; // background
+    
+
     
     // init the blocks
     for (var i=0; i<w; i++) {
@@ -40,6 +45,10 @@ yp.Board.prototype.SetTile = function(loc, val) {
     this.tiles[loc.x][loc.y] = val;
 };
 
+yp.Board.prototype.setSpot = function(spot) {
+    this.spot = spot;
+};
+
 yp.Board.prototype.GetTile = function(loc) {
     this.assertInRange(loc);
     return this.tiles[loc.x][loc.y];
@@ -52,17 +61,29 @@ yp.Board.prototype.LeftPx = function(loc) {
     return yp.GAME_SIZE/2 - (this.SizeInPixels()/2);
 };
 
+yp.Board.prototype.Remove = function() {
+    for (var i=0; i<this.width; i++) {
+        for (var j=0; j<this.height; j++) {
+            this.tiles[i][j].Remove();            
+        }
+    }
+    this.rect.remove();
+    this.back.remove();
+    this.spot.Remove();
+    
+};
+
 // -----------------------------------------------------------------------------
 yp.Board.prototype.SetupGfx = function() {
     console.log("Board SetupGfx...");
-    var r = yp.snap.rect(0, 0, 640, 640);
-    r.attr("fill", "#505050");
+    this.rect = yp.snap.rect(0, 0, 640, 640);
+    this.rect.attr("fill", "#505050");
 
-    var back = yp.snap.rect(this.TopPx(), this.LeftPx(),
+    this.back = yp.snap.rect(this.TopPx(), this.LeftPx(),
                             this.SizeInPixels(), this.SizeInPixels());
-    back.attr("fill", "#333");
-    back.attr("stroke-width", 10);
-    back.attr("stroke", "#333");
+    this.back.attr("fill", "#333");
+    this.back.attr("stroke-width", 10);
+    this.back.attr("stroke", "#333");
     
     for (var i=0; i<this.width; i++) {
         for (var j=0; j<this.height; j++) {
@@ -70,6 +91,8 @@ yp.Board.prototype.SetupGfx = function() {
                                       this.TopPx() + j * yp.TILE_SIZE);
         }
     }
+    
+    this.spot.SetupGfx(this);
 };
 
 

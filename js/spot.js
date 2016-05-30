@@ -2,6 +2,7 @@
 
 yp.Spot = function(loc) {
     this.loc = loc;
+    this.circle = nil;
 };
 
 // ------------------------------------------------------------------
@@ -13,11 +14,18 @@ yp.Spot.prototype.SetupGfx = function(board) {
     var offsetX = this.loc.x * yp.TILE_SIZE + radius;
     var offsetY = this.loc.y * yp.TILE_SIZE + radius;
     
-    var back = yp.snap.circle(left + offsetX,
+    this.circle = yp.snap.circle(left + offsetX,
                               top + offsetY,
                               radius/2);
                              
-    back.attr("fill", "#3030FF");
+    this.circle.attr("fill", "#3030FF");
+};
+
+yp.Spot.prototype.Remove = function(board) {
+    console.log("removing spot.");
+    if (this.circle != nil) {
+        this.circle.remove();
+    }
 };
 
 yp.Spot.prototype.SetPixelPos = function(dir) {

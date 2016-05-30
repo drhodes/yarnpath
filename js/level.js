@@ -17,7 +17,6 @@
 yp.Level = function(map) {
     this.board = nil;
     this.startLoc = nil;
-    this.spot = nil;
     this.setup(map);
 }
 
@@ -52,14 +51,18 @@ yp.Level.prototype.setup = function(map) {
             var char = map[row][col];
             var tile = new yp.Tile(char);
             var loc = new yp.Loc(col, row);
+
             this.board.SetTile(loc, tile);
+            tile.SetCallbackOnClick(function() {
+                console.log("Calling callback");
+            });
+            
             if (tile.IsStartSquare()) {
                 this.startLoc = loc;
             }
         }
     }
-
-    this.spot = new yp.Spot(this.startLoc);
+    this.board.setSpot(new yp.Spot(this.startLoc));
 };
 
 yp.Level.prototype.Width = function(dir) {
@@ -85,8 +88,12 @@ yp.Level.prototype.MoveEast = function(dir) {
 yp.Level.prototype.SetupGfx = function() {
     console.log("Level SetupGfx...");
     this.board.SetupGfx();
-    this.spot.SetupGfx(this.board);
     // allocate some items
+};
+
+yp.Level.prototype.Remove = function() {
+    console.log("Removing Level");
+    this.board.Remove();
 };
 
 yp.Level.prototype.Delete = function() {
