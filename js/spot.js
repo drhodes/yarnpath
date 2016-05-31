@@ -3,6 +3,8 @@
 yp.Spot = function(loc) {
     this.loc = loc;
     this.circle = nil;
+    this.matrix = new Snap.Matrix();
+
 };
 
 // ------------------------------------------------------------------
@@ -32,4 +34,8 @@ yp.Spot.prototype.SetPixelPos = function(dir) {
     // look ahead
 };
 
+yp.Spot.prototype.MoveTo = function(deltaX, deltaY) {
+    this.matrix.translate(deltaX, deltaY);
+    this.circle.transform(this.matrix); 
+};
 

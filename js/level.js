@@ -46,16 +46,17 @@ yp.Level.prototype.setup = function(map) {
     var h = map.length;
     this.board = new yp.Board(w, h);
     
-    for (var row in map) {
-        for (var col in map[row]) {
+    for (var row=0; row < map.length; row++) {
+        for (var col=0; col < map[row].length; col++) {
+            console.log(typeof(col));
             var char = map[row][col];
-            var tile = new yp.Tile(char);
             var loc = new yp.Loc(col, row);
+            var tile = new yp.Tile(char, loc);
 
             this.board.SetTile(loc, tile);
-            tile.SetCallbackOnClick(function() {
-                console.log("Calling callback");
-            });
+            // tile.SetCallbackOnClick(function() {
+            //     console.log("Calling callback");
+            // });
             
             if (tile.IsStartSquare()) {
                 this.startLoc = loc;

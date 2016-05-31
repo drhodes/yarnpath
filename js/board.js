@@ -12,8 +12,7 @@ yp.Board = function Board(w, h) {
     // snap els
     this.rect = nil; // dark grey border
     this.back = nil; // background
-    
-
+    this.lines = [];
     
     // init the blocks
     for (var i=0; i<w; i++) {
@@ -84,7 +83,8 @@ yp.Board.prototype.SetupGfx = function() {
     this.back.attr("fill", "#333");
     this.back.attr("stroke-width", 10);
     this.back.attr("stroke", "#333");
-    
+
+
     for (var i=0; i<this.width; i++) {
         for (var j=0; j<this.height; j++) {
             this.tiles[i][j].SetupGfx(this.LeftPx() + i * yp.TILE_SIZE,
@@ -92,7 +92,104 @@ yp.Board.prototype.SetupGfx = function() {
         }
     }
     
+    this.SetupCallbacks();
     this.spot.SetupGfx(this);
+    this.markDots();
+};
+
+yp.Board.prototype.isTileLineOfSight = function(loc) {
+    // if the tile is in line sight of spot, then true.
+    if (this.tiles[loc.x][loc.y].IsBlock()) {
+        // the way is blocked
+        return false;
+    }
+    
+    if (this.spot.loc.Equal(loc)) {
+        // this is the tile the spot is on. base case.
+        return true;
+    }
+    
+    if (this.spot.loc.x == loc.x) {
+        // share same column.
+        if (loc.y > this.spot.loc.y) {
+            // walk up to where the spot is.
+            return this.isTileLineOfSight(new yp.Loc(loc.x, loc.y-1));
+        }
+        if (loc.y < this.spot.loc.y) {
+            // walk down to where the spot is.
+            return this.isTileLineOfSight(new yp.Loc(loc.x, loc.y+1));
+        }
+    }
+    
+    if (this.spot.loc.y == loc.y) {
+        // share same row.
+        if (loc.x > this.spot.loc.x) {
+            // walk left to where the spot is.
+            return this.isTileLineOfSight(new yp.Loc(loc.x-1, loc.y));
+        }
+        if (loc.x < this.spot.loc.x) {
+            // walk right to where the spot is.
+            return this.isTileLineOfSight(new yp.Loc(loc.x+1, loc.y));
+        }
+    }
+    return false;
+};
+
+yp.Board.prototype.markDots = function() {
+    // tiles that are unblocked rook moves should be marked green.
+    for (var i=0; i<this.width; i++) {
+        for (var j=0; j<this.height; j++) {
+            var tile = this.tiles[i][j];
+            if (this.isTileLineOfSight(new yp.Loc(i, j))) {
+                tile.SetDotColor("#FFF");
+            } else {
+                tile.SetDotColor("#BBB");
+            }
+        }
+    }
 };
 
 
+yp.Board.prototype.drawLineFrom = function(src, dst) {
+    console.log(src);
+    console.log(dst);
+    var srcTile = this.tiles[src.x][src.y];
+    var dstTile = this.tiles[dst.x][dst.y];
+    var px1 = srcTile.CenterPx();
+    var px2 = dstTile.CenterPx();
+    var line = yp.snap.line(px1.x, px1.y, px2.x, px2.y);
+    line.attr("stroke-width", 3);
+    line.attr("stroke", "blue");
+    console.log(line);
+    this.lines.push(line);
+};
+
+yp.Board.prototype.MoveTo = function(dst) {
+    if (this.isTileLineOfSight(dst)) {
+        this.drawLineFrom(this.spot.loc, dst);
+
+        var srcPx = this.tiles[this.spot.loc.x][this.spot.loc.y].CenterPx();
+        var dstPx = this.tiles[dst.x][dst.y].CenterPx();
+
+        var dx = dstPx.x - srcPx.x;
+        var dy = dstPx.y - srcPx.y;
+        this.spot.MoveTo(dx, dy);
+    } else {
+        // do nothing.
+    }
+    this.spot.loc = dst;
+    this.markDots();
+}
+
+yp.Board.prototype.SetupCallbacks = function() {
+    for (var i=0; i<this.width; i++) {
+        for (var j=0; j<this.height; j++) {
+            var tile = this.tiles[i][j];
+            var that = this;
+            tile.SetCallbackOnClick(function(innerTile) {                
+                console.log(innerTile.loc);
+                that.MoveTo(innerTile.loc);
+            });
+        }
+    }
+};

@@ -1,11 +1,12 @@
 
-yp.Tile = function(char) {
+yp.Tile = function(char, loc) {
     yp.TILE_SIZE = 60;
     // -------------------------------------------------------
 
     // the char # is a block
     // the char o is an open square
     // the char s is the start place.
+    this.loc = loc;
     this.isStartSquare = false;
     this.kind = nil;
     this.rect = nil;
@@ -33,10 +34,32 @@ yp.Tile.prototype.IsBlock = function() {
 
 yp.Tile.prototype.SetCallbackOnClick = function(f) {
     console.log("setting callback");
-    this.callbackOnClick = f;
-    // need to wait until snap elements are initialized before
-    // callback can be assigned
+
+    var that = this;
+    this.rect.node.onclick = function() {
+        f(that);
+    };
+    
+    // if (this.dot != nil) {
+    //     this.dot.node.onclick = function() {
+    //         f(that);
+    //     };
+    // }
+
 };
+
+yp.Tile.prototype.SetDotColor = function(color) {
+    if (this.dot != nil) {
+        this.dot.attr("fill", color);
+    }
+};
+
+yp.Tile.prototype.CenterPx = function(color) {
+    var bb = this.dot.getBBox();
+    
+    return {x: bb.x + bb.width/2,
+            y: bb.y + bb.height/2};
+}
 
 yp.Tile.prototype.SetupGfx = function(x, y) {
     this.rect = yp.snap.rect(x+1, y+1, yp.TILE_SIZE-1, yp.TILE_SIZE-1);
@@ -46,18 +69,12 @@ yp.Tile.prototype.SetupGfx = function(x, y) {
         this.rect.attr("fill", "#BBB");
         this.dot = yp.snap.circle(x+yp.TILE_SIZE/2,
                                   y+yp.TILE_SIZE/2,
-                                  yp.TILE_SIZE/12
+                                  yp.TILE_SIZE/30
                                  );
         this.dot.attr("fill", "#B0b0b0");
     }
     this.rect.attr("stroke", "#FFF");
 
-    // assign callbacks
-    this.rect.node.onclick = this.callback;
-    
-    if (this.dot != nil) {
-        this.dot.node.onclick = this.callbackOnClick;
-    }
 
     if (!this.IsBlock()) {
         var that = this;
