@@ -17,6 +17,8 @@ QUnit.test( "out of bounds test 2", function( assert ) {
 
 
 // -------------------------------------------------------
+var NOP = function(){};
+
 QUnit.test( "state machine 1", function( assert ) {
     var sm = new yp.StateMachine("asdf");
     sm.declareStates([
@@ -35,9 +37,9 @@ QUnit.test( "state machine 2", function( assert ) {
         "zxcv"
     ]);
 
-    sm.addTran("go", "start", "middle");
-    sm.addTran("go", "middle", "end");
-    sm.addTran("go", "end", "end");    
+    sm.addTran("go", "start", "middle", NOP);
+    sm.addTran("go", "middle", "end", NOP);
+    sm.addTran("go", "end", "end", NOP);    
     assert.ok( sm.hasTrigger("go") == true);
 });
 
@@ -49,9 +51,9 @@ QUnit.test( "state machine 3", function( assert ) {
         "end",
         "zxcv"
     ]);
-    sm.addTran("go", "start", "middle");
-    sm.addTran("go", "middle", "end");
-    sm.addTran("go", "end", "end");    
+    sm.addTran("go", "start", "middle", NOP);
+    sm.addTran("go", "middle", "end", NOP);
+    sm.addTran("go", "end", "end", NOP);    
     sm.Fire("go");
     assert.ok( sm.curState == "middle");
 });
@@ -65,9 +67,9 @@ QUnit.test( "state machine 4", function( assert ) {
         "end",
         "zxcv"
     ]);
-    sm.addTran("go", "start", "middle");
-    sm.addTran("go", "middle", "end");
-    sm.addTran("go", "end", "end");    
+    sm.addTran("go", "start", "middle", NOP);
+    sm.addTran("go", "middle", "end", NOP);
+    sm.addTran("go", "end", "end", NOP);    
     sm.Fire("go"); sm.Fire("go"); sm.Fire("go"); sm.Fire("go"); sm.Fire("go");
     assert.ok( sm.curState == "end");
 });
@@ -82,9 +84,9 @@ QUnit.test( "state machine 5", function( assert ) {
         "zxcv"
     ]);
     sm.addTrans([
-        ["go", "start", "middle"],
-        ["go", "middle", "end"],
-        ["go", "end", "end"]
+        ["go", "start", "middle", NOP],
+        ["go", "middle", "end", NOP],
+        ["go", "end", "end", NOP]
     ]);
     sm.Fire("go"); sm.Fire("go"); sm.Fire("go"); sm.Fire("go"); sm.Fire("go");
     assert.ok( sm.curState == "end");

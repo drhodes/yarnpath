@@ -11,6 +11,9 @@ clean: ## clean all the things
 work: clean ## open all files in editor
 	emacs -nw js/* tests/* html/*
 
+serve:
+	python -m SimpleHTTPServer
+
 setup:
 	touch battle-plan.org
 	mkdir -p design

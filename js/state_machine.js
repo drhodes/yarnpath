@@ -1,17 +1,32 @@
 // -------------------------------------------------------
 // it's a state machine
 
-yp.StateMachine = function(startState) {
+yp.StateMachine = function(name, startState) {
+    this.machineName = name;
     this.curState = startState;
     this.states = [startState];
     this.trans = [];
-    this.callbacks = [];
 };
 
+yp.StateMachine.prototype.CurrentState = function() {
+    return this.curState;
+};
+
+yp.StateMachine.prototype.LogState = function() {
+    console.log("Machine: " + this.machineName +
+                ", in state: " + this.CurrentState());
+};
 
 yp.StateMachine.prototype.hasTrigger = function(trigger) {
     return this.trans[trigger] !== undefined;
 };
+
+yp.StateMachine.prototype.assertTriggerExists = function(trigger) {
+    if (!this.hasTrigger(trigger)) {
+        throw Error("Trigger doesn't exist: " + trigger);
+    }
+};
+
 
 // states :: [string]
 yp.StateMachine.prototype.declareStates = function(states) {
@@ -19,6 +34,9 @@ yp.StateMachine.prototype.declareStates = function(states) {
 };
 
 yp.StateMachine.prototype.assertStateExists = function(state) {
+    if (state === undefined) {
+        throw Error("State is undefined: " + state);
+    }
     if (this.states.indexOf(state) == -1) {
         throw Error("State doesn't exist: " + state);
     }
@@ -29,11 +47,11 @@ yp.StateMachine.prototype.assertStateExists = function(state) {
 yp.StateMachine.prototype.addTrans = function(transitions) {
     var that = this;
     transitions.forEach(function(t) {
-        that.addTran(t[0], t[1], t[2]);
+        that.addTran(t[0], t[1], t[2], t[3]);
     });
 }
 
-yp.StateMachine.prototype.addTran = function(trigger, fromState, toState) {
+yp.StateMachine.prototype.addTran = function(trigger, fromState, toState, f) {
     this.assertStateExists(fromState); 
     this.assertStateExists(toState);
 
@@ -48,17 +66,21 @@ yp.StateMachine.prototype.addTran = function(trigger, fromState, toState) {
         throw Error(["can't redefine state transition",
                      {trigger : trigger,
                       fromState: fromState,
-                      toState: toState }]);
+                      toState: toState
+                     }]);
     } else {
-        this.trans[trigger][fromState] = toState;
+        this.trans[trigger][fromState] = {toState: toState, callback: f};
     }
+    
 };
 
 yp.StateMachine.prototype.Fire = function(trigger) {
     if (this.hasTrigger(trigger)) {
         var next = this.trans[trigger][this.curState];
-        this.assertStateExists(next);
-        this.curState = next;
+        console.log(["NEXT", next]);
+        this.assertStateExists(next.toState);
+        this.curState = next.toState;
+        next.callback();
     } else {
         throw Error("Trigger doesn't exist: " + trigger);
     }

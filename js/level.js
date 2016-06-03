@@ -20,6 +20,13 @@ yp.Level = function(map) {
     this.setup(map);
 }
 
+yp.Level.prototype.SetCallbackOnWin = function (f) {
+    this.board.SetCallbackOnWin(f);
+};
+yp.Level.prototype.SetCallbackOnStuck = function (f) {
+    this.board.SetCallbackOnStuck(f);
+};
+
 yp.Level.prototype.setup = function(map) {
     if (map.length == 0) {
         throw Error("map has length zero, which is nonsense");

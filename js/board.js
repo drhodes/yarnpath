@@ -13,6 +13,10 @@ yp.Board = function Board(w, h) {
     this.rect = nil; // dark grey border
     this.back = nil; // background
     this.lines = [];
+
+    // callbacks
+    this.callbackOnWin = function() {};
+    this.callbackOnStuck = function() {};
     
     // init the blocks
     for (var i=0; i<w; i++) {
@@ -75,7 +79,7 @@ yp.Board.prototype.Remove = function() {
 // -----------------------------------------------------------------------------
 yp.Board.prototype.SetupGfx = function() {
     console.log("Board SetupGfx...");
-    this.rect = yp.snap.rect(0, 0, 640, 640);
+    this.rect = yp.snap.rect(0, 0, yp.GAME_SIZE, yp.GAME_SIZE);
     this.rect.attr("fill", "#505050");
 
     this.back = yp.snap.rect(this.TopPx(), this.LeftPx(),
@@ -98,8 +102,15 @@ yp.Board.prototype.SetupGfx = function() {
 };
 
 yp.Board.prototype.isTileLineOfSight = function(loc) {
+    // check bounds.
+    if (loc.x < 0) { return false; }
+    if (loc.y < 0) { return false; }
+    if (loc.x >= this.width) { return false; }
+    if (loc.y >= this.height) { return false; }
+    
+    var curTile = this.tiles[loc.x][loc.y];
     // if the tile is in line sight of spot, then true.
-    if (this.tiles[loc.x][loc.y].IsBlock()) {
+    if (curTile.IsBlock()) {
         // the way is blocked
         return false;
     }
@@ -109,8 +120,14 @@ yp.Board.prototype.isTileLineOfSight = function(loc) {
         return true;
     }
     
+    
     if (this.spot.loc.x == loc.x) {
         // share same column.
+        if (curTile.VisitBlocked(yp.TILE_VISIT_V)) {
+            // can't retrace
+            return false;
+        }
+        
         if (loc.y > this.spot.loc.y) {
             // walk up to where the spot is.
             return this.isTileLineOfSight(new yp.Loc(loc.x, loc.y-1));
@@ -123,6 +140,11 @@ yp.Board.prototype.isTileLineOfSight = function(loc) {
     
     if (this.spot.loc.y == loc.y) {
         // share same row.
+        if (curTile.VisitBlocked(yp.TILE_VISIT_H)) {
+            // can't retrace
+            return false;
+        }
+        
         if (loc.x > this.spot.loc.x) {
             // walk left to where the spot is.
             return this.isTileLineOfSight(new yp.Loc(loc.x-1, loc.y));
@@ -138,57 +160,168 @@ yp.Board.prototype.isTileLineOfSight = function(loc) {
 yp.Board.prototype.markDots = function() {
     // tiles that are unblocked rook moves should be marked green.
     for (var i=0; i<this.width; i++) {
-        for (var j=0; j<this.height; j++) {
+        for (var j=0; j<this.height; j++) {            
             var tile = this.tiles[i][j];
             if (this.isTileLineOfSight(new yp.Loc(i, j))) {
-                tile.SetDotColor("#FFF");
+                if (tile.IsUnvisited()) {
+                    tile.SetDotColor("white");
+                }
             } else {
+                tile.SetDotColor("#BBB");
+            }
+            if(tile.loc.Equal(this.spot.loc)) {
                 tile.SetDotColor("#BBB");
             }
         }
     }
 };
 
-
 yp.Board.prototype.drawLineFrom = function(src, dst) {
-    console.log(src);
-    console.log(dst);
     var srcTile = this.tiles[src.x][src.y];
     var dstTile = this.tiles[dst.x][dst.y];
     var px1 = srcTile.CenterPx();
     var px2 = dstTile.CenterPx();
     var line = yp.snap.line(px1.x, px1.y, px2.x, px2.y);
-    line.attr("stroke-width", 3);
+    line.attr("stroke-width", 3); 
+    line.attr("stroke-linecap", "round");
     line.attr("stroke", "blue");
-    console.log(line);
     this.lines.push(line);
 };
 
+yp.Board.prototype.VisitLine = function(src, dst) {
+    var s = src.Clone(); 
+    var d = dst.Clone();
+   
+    if (s.x == d.x) {
+        // visiting sub column
+        while (true) {
+            this.tiles[s.x][s.y].VisitAs(yp.TILE_VISIT_V);
+            if (s.y < d.y) {
+                s.y++;
+            } else {
+                s.y--;
+            }
+            if (s.y == d.y) {
+                this.tiles[s.x][s.y].VisitAs(yp.TILE_VISIT_V);
+                return;
+            }
+        }
+    }
+    if (s.y == d.y) {
+        // visiting sub row
+        while (true) {
+            this.tiles[s.x][s.y].VisitAs(yp.TILE_VISIT_H);
+            if (s.x < d.x) {
+                s.x++;
+            } else {
+                s.x--;
+            }
+            if (s.x == d.x) {
+                this.tiles[s.x][s.y].VisitAs(yp.TILE_VISIT_H);
+                return;
+            }
+        }
+    }
+    throw Error("can't visit diaganol");
+};
+
+
+
 yp.Board.prototype.MoveTo = function(dst) {
+    if (this.spot.loc == dst) {
+        return;
+    }
+    
     if (this.isTileLineOfSight(dst)) {
-        this.drawLineFrom(this.spot.loc, dst);
+        var curLoc = this.spot.loc.Clone();
+        this.drawLineFrom(curLoc, dst);
 
         var srcPx = this.tiles[this.spot.loc.x][this.spot.loc.y].CenterPx();
         var dstPx = this.tiles[dst.x][dst.y].CenterPx();
 
         var dx = dstPx.x - srcPx.x;
         var dy = dstPx.y - srcPx.y;
-        this.spot.MoveTo(dx, dy);
-    } else {
-        // do nothing.
+
+        var that = this;
+        this.spot.MoveTo(dx, dy, function() {
+            // spot doesn't know about pixels, thus the messiness.
+            // maybe spot should know about pixels.        
+            that.spot.loc = dst;
+            that.VisitLine(curLoc, dst);
+            that.markDots();
+            
+            if (that.checkWin()) {
+                // notify level-mgr to start next level
+                that.callbackOnWin();
+            }
+            if (that.checkStuck()) {
+                console.log("GAME IS SO OVER MAN");
+                that.callbackOnStuck();
+            }
+            that.spot.ToFront();
+        }); // these are delta pixels.        
     }
-    this.spot.loc = dst;
-    this.markDots();
-}
+};
+
+yp.Board.prototype.checkWin = function() {
+    for (var i=0; i<this.width; i++) {
+        for (var j=0; j<this.height; j++) {
+            var tile = this.tiles[i][j];
+            if (tile.IsBlock()) {
+                // block tiles aren't checked for visits.
+                continue;
+            }
+            if (tile.IsUnvisited()) {
+                // found an unvisited
+                return false;
+            }
+        }
+    }
+    return true;
+};
+
+yp.Board.prototype.checkStuck = function() {
+    // check for unvisited tiles.
+    var tilesUnvisited = false;
+    var anyWhiteDots = false;
+    for (var i=0; i<this.width; i++) {
+        for (var j=0; j<this.height; j++) {
+            var tile = this.tiles[i][j];
+            if (tile.IsBlock()) {
+                // block tiles aren't checked for visits.
+                continue;
+            }
+            if (tile.IsUnvisited()) {
+                // found an unvisited
+                tilesUnvisited = true;
+            }
+            if (tile.color == "white") {
+                anyWhiteDots = true;
+            }
+        }
+    }
+    return !anyWhiteDots && tilesUnvisited;
+};
+
+
+yp.Board.prototype.SetCallbackOnWin = function (f) {
+    this.callbackOnWin = f;
+};
+yp.Board.prototype.SetCallbackOnStuck = function (f) {
+    this.callbackOnStuck = f;
+};
 
 yp.Board.prototype.SetupCallbacks = function() {
     for (var i=0; i<this.width; i++) {
         for (var j=0; j<this.height; j++) {
-            var tile = this.tiles[i][j];
+            var tile = this.tiles[i][j];            
             var that = this;
-            tile.SetCallbackOnClick(function(innerTile) {                
-                console.log(innerTile.loc);
-                that.MoveTo(innerTile.loc);
+            tile.SetCallbackOnClick(function(clickedTile) {
+                if (clickedTile.visitType == yp.TILE_VISIT_EMPTY) {
+                    if (that.isTileLineOfSight(clickedTile.loc)) {
+                        that.MoveTo(clickedTile.loc);
+                    }
+                }
             });
         }
     }

@@ -1,6 +1,9 @@
 
 yp.Tile = function(char, loc) {
     yp.TILE_SIZE = 60;
+    yp.TILE_VISIT_EMPTY = 0; // a tile hasn't been visted
+    yp.TILE_VISIT_H = 1; // spot passed through from side to side
+    yp.TILE_VISIT_V = 2; // spot passed through vertically
     // -------------------------------------------------------
 
     // the char # is a block
@@ -11,6 +14,9 @@ yp.Tile = function(char, loc) {
     this.kind = nil;
     this.rect = nil;
     this.dot = nil;
+    this.visitType = yp.TILE_VISIT_EMPTY;
+    this.color = nil;
+
     
     if (char === "#") {
         this.kind = "block";
@@ -22,6 +28,27 @@ yp.Tile = function(char, loc) {
     }
 
     this.callbackOnClick = "callback needs to be initialized.";
+};
+
+
+yp.Tile.prototype.VisitAs = function(visitType) {
+    if (visitType < 1 || visitType > 2) {
+        throw Error("Bad visit type: " + visitType);
+    }
+    this.visitType += visitType;
+};
+
+yp.Tile.prototype.VisitBlocked = function(visitType) {
+    if (this.visitType == yp.TILE_VISIT_EMPTY) {
+        return false;
+    }
+    if (this.visitType == visitType) {
+        return true;
+    }
+    if (this.visitType > 2) {
+        return true;
+    }
+    return false;
 };
 
 yp.Tile.prototype.IsStartSquare = function() {
@@ -40,15 +67,19 @@ yp.Tile.prototype.SetCallbackOnClick = function(f) {
         f(that);
     };
     
-    // if (this.dot != nil) {
-    //     this.dot.node.onclick = function() {
-    //         f(that);
-    //     };
-    // }
+    if (this.dot != nil) {
+        this.dot.node.onclick = function() {
+            f(that);
+        };
+    }
+};
 
+yp.Tile.prototype.IsUnvisited = function(color) {
+    return this.visitType == yp.TILE_VISIT_EMPTY;
 };
 
 yp.Tile.prototype.SetDotColor = function(color) {
+    this.color = color;
     if (this.dot != nil) {
         this.dot.attr("fill", color);
     }

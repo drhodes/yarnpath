@@ -15,3 +15,6 @@ yp.Loc = function Loc(x, y) {
 yp.Loc.prototype.Equal = function(loc) {
     return (this.x == loc.x) && (this.y == loc.y);
 };
+yp.Loc.prototype.Clone = function() {
+    return new yp.Loc(this.x, this.y);
+};

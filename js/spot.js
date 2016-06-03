@@ -4,7 +4,6 @@ yp.Spot = function(loc) {
     this.loc = loc;
     this.circle = nil;
     this.matrix = new Snap.Matrix();
-
 };
 
 // ------------------------------------------------------------------
@@ -30,12 +29,17 @@ yp.Spot.prototype.Remove = function(board) {
     }
 };
 
+yp.Spot.prototype.ToFront = function() {
+    this.circle.attr({"z-index": 1});
+};
+
+
 yp.Spot.prototype.SetPixelPos = function(dir) {
     // look ahead
 };
 
-yp.Spot.prototype.MoveTo = function(deltaX, deltaY) {
-    this.matrix.translate(deltaX, deltaY);
-    this.circle.transform(this.matrix); 
+yp.Spot.prototype.MoveTo = function(deltaX, deltaY, callback) {
+    this.matrix.translate(deltaX, deltaY);    
+    this.circle.animate({transform: this.matrix}, 100, callback); 
 };
 
