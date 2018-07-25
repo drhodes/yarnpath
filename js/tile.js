@@ -1,6 +1,6 @@
 
 yp.Tile = function(char, loc) {
-    yp.TILE_SIZE = 60;
+    yp.TILE_SIZE = 30;
     yp.TILE_VISIT_EMPTY = 0; // a tile hasn't been visted
     yp.TILE_VISIT_H = 1; // spot passed through from side to side
     yp.TILE_VISIT_V = 2; // spot passed through vertically
